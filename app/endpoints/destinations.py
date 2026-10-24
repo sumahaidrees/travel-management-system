@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from app.core.security import get_admin_user
 
 from app.controllers.destination_controller import (
     create_destination,
@@ -9,7 +10,6 @@ from app.controllers.destination_controller import (
     get_destinations,
     update_destination,
 )
-from app.core.security import get_admin_user
 from app.database import get_db
 from app.models import User
 from app.schemas import DestinationCreate, DestinationResponse
@@ -50,12 +50,13 @@ def update(
     destination_id: int,
     data: DestinationCreate,
     db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
 ):
     return update_destination(destination_id, data, db)
 
 
 @router.delete("/destinations/{destination_id}")
-def delete(destination_id: int, db: Session = Depends(get_db)):
+def delete(destination_id: int, db: Session = Depends(get_db),_admin: User = Depends(get_admin_user),):
     return delete_destination(destination_id, db)
 
 

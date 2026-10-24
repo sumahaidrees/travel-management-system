@@ -22,17 +22,27 @@ def create_booking(data: BookingCreate, db: Session, current_user: User):
 
 
 def get_bookings(db: Session, current_user: User):
-    return db.query(Booking).filter(Booking.user_id == current_user.id).all()
+    query = db.query(Booking)
+
+    if current_user.role != "admin":
+        query = query.filter(Booking.user_id == current_user.id)
+
+    return query.all()
 
 
 def get_booking(booking_id: int, db: Session, current_user: User):
-    booking = db.query(Booking).filter(
-        Booking.id == booking_id,
-        Booking.user_id == current_user.id,
-    ).first()
+    query = db.query(Booking).filter(Booking.id == booking_id)
+
+    if current_user.role != "admin":
+        query = query.filter(Booking.user_id == current_user.id)
+
+    booking = query.first()
+
     if booking is None:
         raise HTTPException(status_code=404, detail="Booking not found")
+
     return booking
+
 
 
 def update_booking(
@@ -42,6 +52,12 @@ def update_booking(
     current_user: User,
 ):
     booking = get_booking(booking_id, db, current_user)
+
+    if booking.status in ("cancelled", "completed"):
+        raise HTTPException(
+        status_code=400,
+        detail="Cancelled or completed bookings cannot be updated",
+    )
     updates = data.model_dump(exclude_unset=True)
 
     if "number_of_people" in updates and (
@@ -72,6 +88,11 @@ def cancel_booking(booking_id: int, db: Session, current_user: User):
     booking = get_booking(booking_id, db, current_user)
     if booking.status == "cancelled":
         raise HTTPException(status_code=400, detail="Booking is already cancelled")
+    if booking.status == "completed":
+        raise HTTPException(
+        status_code=400,
+        detail="Completed bookings cannot be cancelled",
+    )
 
     booking.status = "cancelled"
     db.commit()

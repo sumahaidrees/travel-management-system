@@ -11,9 +11,19 @@ class BookingCreate(BaseModel):
 
 
 class BookingUpdate(BaseModel):
-    customer_name: str | None = Field(None, min_length=2, max_length=100)
+    customer_name: str | None = Field(
+        default=None,
+        min_length=2,
+        max_length=100,
+    )
     travel_date: date | None = None
-    number_of_people: int | None = Field(None, gt=0, le=20)
+    number_of_people: int | None = Field(
+        default=None,
+        gt=0,
+        le=20,
+    )
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class BookingResponse(BaseModel):

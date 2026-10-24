@@ -10,12 +10,19 @@ from app.controllers.package_controller import (
 )
 from app.database import get_db
 from app.schemas import PackageCreate, PackageResponse
+from app.core.security import get_admin_user
+from app.models import User
+
 
 router = APIRouter(tags=["packages"])
 
 
 @router.post("/packages", response_model=PackageResponse, status_code=201)
-def create(data: PackageCreate, db: Session = Depends(get_db)):
+def create(
+    data: PackageCreate,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+):
     return create_package(data, db)
 
 
@@ -34,10 +41,15 @@ def update(
     package_id: int,
     data: PackageCreate,
     db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
 ):
     return update_package(package_id, data, db)
 
 
 @router.delete("/packages/{package_id}")
-def delete(package_id: int, db: Session = Depends(get_db)):
+def delete(
+    package_id: int,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+):
     return delete_package(package_id, db)
