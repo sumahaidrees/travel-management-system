@@ -1,13 +1,18 @@
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict, Field
-
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class BookingCreate(BaseModel):
     customer_name: str = Field(min_length=2, max_length=100)
     travel_date: date
     number_of_people: int = Field(gt=0, le=20)
     package_id: int = Field(gt=0)
+    @field_validator("travel_date")
+    @classmethod
+    def validate_travel_date(cls, value: date) -> date:
+        if value < date.today():
+            raise ValueError("Travel date cannot be in the past")
+        return value
 
 
 class BookingUpdate(BaseModel):
@@ -24,6 +29,12 @@ class BookingUpdate(BaseModel):
     )
 
     model_config = ConfigDict(extra="forbid")
+    @field_validator("travel_date")
+    @classmethod
+    def validate_travel_date(cls, value: date | None) -> date | None:
+        if value is not None and value < date.today():
+            raise ValueError("Travel date cannot be in the past")
+        return value
 
 
 class BookingResponse(BaseModel):

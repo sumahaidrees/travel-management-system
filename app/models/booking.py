@@ -21,7 +21,7 @@ class Booking(Base):
         Numeric(10, 2), nullable=False
     )
     status: Mapped[str] = mapped_column(
-        String(20), default="pending", nullable=False
+        String(20), default="confirmed", nullable=False
     )
     package_id: Mapped[int] = mapped_column(
         ForeignKey("packages.id"), nullable=False
