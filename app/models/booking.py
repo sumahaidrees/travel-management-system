@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import date, datetime,timezone
 
-from sqlalchemy import Date, ForeignKey, Integer, Numeric, String
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -15,6 +15,11 @@ class Booking(Base):
     customer_name: Mapped[str] = mapped_column(
         String(100), nullable=False
     )
+    created_at: Mapped[datetime] = mapped_column(
+    DateTime(timezone=True),
+    nullable=False,
+    default=lambda: datetime.now(timezone.utc),
+)
     travel_date: Mapped[date] = mapped_column(Date, nullable=False)
     number_of_people: Mapped[int] = mapped_column(Integer, nullable=False)
     total_price: Mapped[float] = mapped_column(

@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.models import Booking, Package, User
+from datetime import datetime, timedelta, timezone
 from app.schemas import BookingCreate, BookingUpdate
 
 
@@ -86,17 +87,36 @@ def update_booking(
 
 def cancel_booking(booking_id: int, db: Session, current_user: User):
     booking = get_booking(booking_id, db, current_user)
+
     if booking.status == "cancelled":
-        raise HTTPException(status_code=400, detail="Booking is already cancelled")
+        raise HTTPException(
+            status_code=400,
+            detail="Booking is already cancelled",
+        )
+
     if booking.status == "completed":
         raise HTTPException(
-        status_code=400,
-        detail="Completed bookings cannot be cancelled",
-    )
+            status_code=400,
+            detail="Completed bookings cannot be cancelled",
+        )
+
+    now = datetime.now(timezone.utc)
+    created_at = booking.created_at
+
+    # Handle timestamps without timezone information
+    if created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=timezone.utc)
+
+    if now - created_at > timedelta(hours=24):
+        raise HTTPException(
+            status_code=400,
+            detail="Booking can only be cancelled within 24 hours of creation",
+        )
 
     booking.status = "cancelled"
     db.commit()
     db.refresh(booking)
+
     return {
         "message": "Booking cancelled successfully",
         "booking_id": booking.id,
